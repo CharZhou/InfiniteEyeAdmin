@@ -1,6 +1,6 @@
 module.exports = {
 
-  title: 'Vue Admin Template',
+  title: 'InfiniteEyeAdmin',
 
   /**
    * @type {boolean} true | false
