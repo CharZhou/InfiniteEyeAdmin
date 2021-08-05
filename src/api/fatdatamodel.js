@@ -32,3 +32,12 @@ export async function queryFatDataModel(modelId, queryCondition, queryOption = {
   })
 }
 
+export async function removeFatDataModelDataProperty(modelId, propertyId) {
+  return businessRequest(`/fatdata/${modelId}/${propertyId}`, 'delete')
+}
+
+export async function addFatDataModelDataProperty(modelId, propertyId) {
+  return businessRequest(`/fatdata/${modelId}/property`, 'put', {
+    propertyId
+  })
+}

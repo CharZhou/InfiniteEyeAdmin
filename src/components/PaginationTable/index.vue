@@ -2,6 +2,8 @@
   <div>
     <el-table
       :data="tableData"
+      border
+      fit
       @selection-change="handleSelectionChange"
     >
       <slot />

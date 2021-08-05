@@ -16,16 +16,16 @@
       @handleChange="handlePageChange"
     >
       <!--      <el-table-column type="selection" />-->
-      <el-table-column label="序号" width="60">
+      <el-table-column label="序号">
         <template slot-scope="scope">
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="系统ID" width="240" prop="_id" />
-      <el-table-column label="系统名称" width="180" prop="system_name" />
-      <el-table-column label="数据库名" width="180" prop="database_name" />
-      <el-table-column label="数据库账号" width="180" prop="system_user" />
-      <el-table-column label="数据库密码" width="240" prop="system_password" />
+      <el-table-column label="系统ID" prop="_id" />
+      <el-table-column label="系统名称" prop="system_name" />
+      <el-table-column label="数据库名" prop="database_name" />
+      <el-table-column label="数据库账号" prop="system_user" />
+      <el-table-column label="数据库密码" prop="system_password" />
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-button

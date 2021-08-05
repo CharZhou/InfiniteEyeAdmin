@@ -46,58 +46,51 @@ export const constantRoutes = [
   {
     path: '/',
     component: Layout,
-    redirect: '/dashboard',
-    children: [{
-      path: 'dashboard',
-      name: 'Dashboard',
-      component: () => import('@/views/dashboard/index'),
-      meta: { title: 'Dashboard', icon: 'dashboard' }
-    }]
+    redirect: '/datasystem'
   },
 
   {
     path: '/datasystem',
     component: Layout,
-    redirect: '/datasystem/index',
+    redirect: '/datasystem/list',
     meta: { title: '数据系统管理', icon: 'dashboard' },
     children: [
       {
-        path: 'index',
-        name: 'index',
+        path: 'list',
+        name: 'list',
         component: () => import('@/views/datasystem/index'),
         meta: { title: '数据系统清单', icon: 'dashboard' }
-      },
-      {
-        path: 'index2',
-        name: 'index2',
-        component: () => import('@/views/datasystem/index'),
-        meta: { title: '数据系统清单2', icon: 'dashboard' }
       }
     ]
   },
 
   {
-    path: '/fatdatamodel',
+    path: '/datamodel',
     component: Layout,
-    redirect: '/fatdatamodel/index',
+    redirect: '/datamodel/fat',
     meta: { title: '胖数据模型管理', icon: 'dashboard' },
     children: [
       {
-        path: 'index',
-        name: 'index',
+        path: 'fat',
+        name: 'fat',
         component: () => import('@/views/fatdatamodel/index'),
         meta: { title: '胖数据模型清单', icon: 'dashboard' }
       },
       {
-        path: 'index2',
-        name: 'index2',
+        path: 'thin',
+        name: 'thin',
         component: () => import('@/views/fatdatamodel/index'),
-        meta: { title: '胖数据模型清单2', icon: 'dashboard' }
+        meta: { title: '瘦数据模型清单', icon: 'dashboard' }
       },
       {
         path: 'edit',
         name: 'edit',
         component: () => import('@/views/fatdatamodel/edit/index')
+      },
+      {
+        path: 'query',
+        name: 'query',
+        component: () => import('@/views/fatdatamodel/query/index')
       }
     ]
   },

@@ -18,32 +18,126 @@
           </el-form>
           <el-button type="primary" @click="updateBaseInfo">保存数据</el-button>
         </el-tab-pane>
-        <el-tab-pane label="属性信息" name="properties" />
+        <el-tab-pane label="属性信息" name="properties">
+          <el-card>
+            <div slot="header" class="clearfix">
+              <div class="buttonGroup">
+                <el-button type="primary" @click="handleAddProperty">新增数据属性</el-button>
+              </div>
+            </div>
+            <el-table
+              :data="fdmData.properties"
+              border
+              fit
+            >
+              <el-table-column label="序号">
+                <template slot-scope="scope">
+                  {{ scope.$index + 1 }}
+                </template>
+              </el-table-column>
+              <el-table-column label="属性名" prop="name" />
+              <el-table-column label="数据KEY" prop="key" />
+              <el-table-column label="数据类型" prop="type" :formatter="dpTypeFormatter" />
+              <el-table-column label="操作">
+                <template slot-scope="scope">
+                  <el-button
+                    size="mini"
+                    type="primary"
+                    @click="handleEditProperty(scope.$index, scope.row)"
+                  >
+                    编辑
+                  </el-button>
+                  <el-button
+                    size="mini"
+                    type="danger"
+                    @click="handleRemoveProperty(scope.$index, scope.row)"
+                  >
+                    删除
+                  </el-button>
+                </template>
+              </el-table-column>
+            </el-table>
+          </el-card>
+
+        </el-tab-pane>
       </el-tabs>
     </el-card>
+    <DataPropertyEditDialog ref="editDialog" :exclude-type="excludeDataPropertyTypes" @dialogClose="handleDPDialogClose" />
   </div>
 </template>
 
 <script>
-import { getFatDataModelData, updateFatDataModelData } from '@/api/fatdatamodel'
+import { getFatDataModelData, updateFatDataModelData, removeFatDataModelDataProperty, addFatDataModelDataProperty } from '@/api/fatdatamodel'
 import { listDataSystem } from '@/api/datasystem'
+import DataPropertyEditDialog from '@/dialog/DataPropertyEditDialog'
+import { getAllowedDataPropertyType } from '@/api/dataproperty'
 
 export default {
   name: 'Index',
+  components: {
+    DataPropertyEditDialog
+  },
   data() {
     return {
+      excludeDataPropertyTypes: ['FatDataModelRef', 'ThinDataModelRef'],
       fdmId: '',
       fdmData: {},
       currentTab: 'base',
-      dataSystemList: []
+      dataSystemList: [],
+      allowedDataPropertyType: {}
     }
   },
   async mounted() {
+    await this.loadAllowedDataPropertyType()
+
     this.fdmId = this.$route.query.fdmId
-    this.fdmData = await getFatDataModelData(this.fdmId)
-    this.dataSystemList = await listDataSystem()
+    await this.loadFDMData()
   },
   methods: {
+    dpTypeFormatter(row) {
+      return this.allowedDataPropertyType[row.type].label
+    },
+    async loadAllowedDataPropertyType() {
+      this.allowedDataPropertyType = await getAllowedDataPropertyType()
+    },
+    async loadFDMData() {
+      const loadHandler = this.$loading({
+        text: '获取数据中'
+      })
+      this.fdmData = await getFatDataModelData(this.fdmId)
+      this.dataSystemList = await listDataSystem()
+      loadHandler.close()
+    },
+    async handleRemoveProperty(index, data) {
+      await this.$confirm('此操作将删除该数据属性，但不影响已有数据, 是否继续?', '提示', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning'
+      })
+
+      await removeFatDataModelDataProperty(this.fdmId, data._id)
+      await this.loadFDMData()
+    },
+    async handleAddProperty() {
+      await this.$refs.editDialog.openCreateDialog()
+      this.$refs.editDialog.$once('handleAddDataProperty', async(dataPropertyEntity) => {
+        const loadHandler = this.$loading({
+          text: '提交数据中...'
+        })
+        // console.log('handleAddDataProperty', dataPropertyEntity)
+        await addFatDataModelDataProperty(this.fdmId, dataPropertyEntity._id)
+        await this.loadFDMData()
+        loadHandler.close()
+      })
+    },
+    async handleDPDialogClose(confirm) {
+      if (confirm) {
+        await this.loadFDMData()
+      }
+    },
+    handleEditProperty(index, data) {
+      this.$refs.editDialog.openEditDialog(data._id)
+    },
     async updateBaseInfo() {
       this.$loading({
         text: '提交更新中...'
@@ -74,4 +168,19 @@ export default {
 }
 </script>
 
-<style scoped />
+<style scoped lang="scss">
+
+.clearfix:before, .clearfix:after {
+  display: table;
+  content: "";
+}
+
+.clearfix:after {
+  clear: both;
+}
+
+.buttonGroup{
+  float: left;
+}
+
+</style>

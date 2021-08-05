@@ -16,15 +16,15 @@
       @handleChange="handlePageChange"
     >
       <!--      <el-table-column type="selection" />-->
-      <el-table-column label="序号" width="60">
+      <el-table-column label="序号">
         <template slot-scope="scope">
           {{ scope.$index + 1 }}
         </template>
       </el-table-column>
-      <el-table-column label="系统ID" width="240" prop="_id" />
-      <el-table-column label="模型名称" width="180" prop="model_name" />
-      <el-table-column label="所属系统ID" width="240" prop="belong_system" />
-      <el-table-column label="创建时间" width="300" prop="create_time" />
+      <el-table-column label="系统ID" prop="_id" />
+      <el-table-column label="模型名称" prop="model_name" />
+      <el-table-column label="所属系统ID" prop="belong_system" />
+      <el-table-column label="创建时间" prop="create_time" />
       <el-table-column label="属性条数">
         <template slot-scope="scope">
           {{ scope.row.properties.length }}
@@ -32,6 +32,12 @@
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
+          <el-button
+            size="mini"
+            @click="queryFDM(scope.$index, scope.row)"
+          >
+            查询
+          </el-button>
           <el-button
             size="mini"
             type="primary"
@@ -80,6 +86,9 @@ export default {
     await this.loadFatDataModelList()
   },
   methods: {
+    async queryFDM(fatDataModelIndex, fatDataModelEntity) {
+      this.$router.push({ path: './query', query: { fdmId: fatDataModelEntity._id }})
+    },
     async editFDM(fatDataModelIndex, fatDataModelEntity) {
       this.$router.push({ path: './edit', query: { fdmId: fatDataModelEntity._id }})
     },
