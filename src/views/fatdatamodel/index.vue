@@ -1,10 +1,10 @@
 <template>
   <el-card>
     <div slot="header" class="clearfix">
-      <span>胖数据模型系统列表</span>
+      <span>胖数据模型列表</span>
       <div class="buttonGroup">
         <el-button type="primary" @click="refreshFDMList">刷新</el-button>
-        <el-button type="primary" @click="showADSPopup">新增数据模型</el-button>
+        <el-button type="primary" @click="addModel">新增数据模型</el-button>
       </div>
     </div>
     <PaginationTable
@@ -56,21 +56,21 @@
       </el-table-column>
     </PaginationTable>
 
-    <DataSystemAddDialog ref="dsAddDialog" @dialogClose="handleFDMDialogClose" />
-
+    <DataModelAddDialog ref="addDialog" model-type="fat" @dialogClose="handleFDMDialogClose" />
   </el-card>
+
 </template>
 
 <script>
 import { listFatDataModel, delFatDataModel } from '@/api/fatdatamodel'
 import PaginationTable from '@/components/PaginationTable'
-import DataSystemAddDialog from '@/dialog/DataSystemAddDialog'
+import DataModelAddDialog from '@/dialog/DataModelAddDialog'
 
 export default {
   name: 'DataSystem',
   components: {
     PaginationTable,
-    DataSystemAddDialog
+    DataModelAddDialog
   },
   data() {
     return {
@@ -96,8 +96,8 @@ export default {
       this.currentPage = 1
       await this.loadFatDataModelList()
     },
-    showADSPopup() {
-      this.$refs.dsAddDialog.openDialog()
+    addModel() {
+      this.$refs.addDialog.openDialog()
     },
     async handleFDMDialogClose(confirm) {
       if (confirm) {
@@ -133,17 +133,17 @@ export default {
 
 <style scoped lang="scss">
 
-.clearfix:before, .clearfix:after {
+  .clearfix:before, .clearfix:after {
   display: table;
   content: "";
-}
+  }
 
-.clearfix:after {
+  .clearfix:after {
   clear: both;
-}
+  }
 
-.buttonGroup{
+  .buttonGroup{
   float: right;
-}
+  }
 
 </style>

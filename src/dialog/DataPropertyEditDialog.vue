@@ -18,19 +18,18 @@
         </el-select>
       </el-form-item>
       <el-form-item v-if="isShowRefArea" prop="ref">
-        <el-form label-position="top" :rules="rules" label-width="80px" :model="dataPropertyEntity.ref">
-          <el-form-item label="目标模型">
+        <el-form label-position="top" label-width="80px" :model="dataPropertyEntity.ref">
+          <el-form-item label="源KEY" prop="source_key">
+            <el-select v-model="dataPropertyEntity.ref.source_key" filterable>
+              <el-option v-for="sourceKeyData in sourceKeyOptions" :key="sourceKeyData._id" :label="sourceKeyData.name" :value="sourceKeyData.key" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="目标模型" property="target_model">
             <el-select v-model="dataPropertyEntity.ref.target_model" filterable>
               <el-option v-for="model in targetModelOptions" :key="model._id" :label="model.model_name" :value="model._id" />
             </el-select>
           </el-form-item>
-          <el-form-item label="源KEY">
-            <el-select v-model="dataPropertyEntity.ref.source_key" filterable>
-              <el-option v-for="sourceKeyData in sourceKeyOptions" :key="sourceKeyData._id" :label="sourceKeyData.name" :value="sourceKeyData.key" />
-            </el-select>
-            <!--            <el-input v-model="dataPropertyEntity.ref.source_key" />-->
-          </el-form-item>
-          <el-form-item label="目标KEY">
+          <el-form-item label="目标KEY" prop="target_key">
             <el-select v-model="dataPropertyEntity.ref.target_key" filterable>
               <el-option v-for="targetKeyData in targetKeyOptions" :key="targetKeyData._id" :label="targetKeyData.name" :value="targetKeyData.key" />
             </el-select>
@@ -84,8 +83,7 @@ export default {
           { type: 'string', required: true, message: '请输入数据系统名', trigger: 'change' }
         ],
         key: [
-          { required: true, message: '请输入数据KEY', trigger: 'change' },
-          { pattern: '^\\w+$', message: '不符合数据KEY规范', trigger: 'change' }
+          { required: true, message: '请输入数据KEY', trigger: 'change' }
         ],
         type: [
           { required: true, message: '请选择数据类型', trigger: 'change' }
@@ -115,12 +113,13 @@ export default {
   },
   watch: {
     async 'dataPropertyEntity.type'(newVal, oldVal) {
+      // console.log('type', newVal)
       if (!newVal) {
         return
       }
-      this.dataPropertyEntity.ref.target_model = null
-      this.dataPropertyEntity.ref.source_key = null
-      this.dataPropertyEntity.ref.target_key = null
+      this.$set(this.dataPropertyEntity, 'ref.target_model', null)
+      this.$set(this.dataPropertyEntity, 'ref.source_key', null)
+      this.$set(this.dataPropertyEntity, 'ref.target_key', null)
       if (newVal === 'FatModelRef') {
         this.targetModelOptions = await listFatDataModel()
       } else if (newVal === 'ThinModelRef') {
@@ -128,11 +127,12 @@ export default {
       }
     },
     async 'dataPropertyEntity.ref.target_model'(newVal, oldVal) {
+      // console.log('target_model', newVal)
       if (!newVal) {
         return
       }
-      this.dataPropertyEntity.ref.source_key = null
-      this.dataPropertyEntity.ref.target_key = null
+      this.$set(this.dataPropertyEntity, 'ref.source_key', null)
+      this.$set(this.dataPropertyEntity, 'ref.target_key', null)
       let modelData
       if (this.dataPropertyEntity.type === 'FatModelRef') {
         modelData = await getFatDataModelData(newVal)
@@ -140,7 +140,8 @@ export default {
         modelData = await getThinDataModelData(newVal)
       }
       this.targetKeyOptions = modelData.properties
-    }
+    },
+    deep: true
   },
   methods: {
     async loadDataPropertyData() {

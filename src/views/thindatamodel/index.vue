@@ -1,10 +1,10 @@
 <template>
   <el-card>
     <div slot="header" class="clearfix">
-      <span>瘦数据模型系统列表</span>
+      <span>瘦数据模型列表</span>
       <div class="buttonGroup">
         <el-button type="primary" @click="refreshFDMList">刷新</el-button>
-        <el-button type="primary" @click="showADSPopup">新增数据模型</el-button>
+        <el-button type="primary" @click="addModel">新增数据模型</el-button>
       </div>
     </div>
     <PaginationTable
@@ -55,22 +55,20 @@
         </template>
       </el-table-column>
     </PaginationTable>
-
-    <DataSystemAddDialog ref="dsAddDialog" @dialogClose="handleTDMDialogClose" />
-
+    <DataModelAddDialog ref="addDialog" model-type="thin" @dialogClose="handleTDMDialogClose" />
   </el-card>
 </template>
 
 <script>
 import { listThinDataModel, delThinDataModel } from '@/api/thindatamodel'
 import PaginationTable from '@/components/PaginationTable'
-import DataSystemAddDialog from '@/dialog/DataSystemAddDialog'
+import DataModelAddDialog from '@/dialog/DataModelAddDialog'
 
 export default {
   name: 'DataSystem',
   components: {
     PaginationTable,
-    DataSystemAddDialog
+    DataModelAddDialog
   },
   data() {
     return {
@@ -96,8 +94,8 @@ export default {
       this.currentPage = 1
       await this.loadThinDataModelList()
     },
-    showADSPopup() {
-      this.$refs.dsAddDialog.openDialog()
+    addModel() {
+      this.$refs.addDialog.openDialog()
     },
     async handleTDMDialogClose(confirm) {
       if (confirm) {

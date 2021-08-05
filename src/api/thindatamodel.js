@@ -12,12 +12,10 @@ export async function updateThinDataModelData(modelId, modelData) {
   return businessRequest(`/thindata/${modelId}`, 'patch', modelData)
 }
 
-export async function addThinDataModel(modelName, collectionName, systemId, propertyId) {
+export async function addThinDataModel(modelName, systemId) {
   return businessRequest('/thindata/', 'put', {
     name: modelName,
-    collectionName,
-    systemId,
-    propertyId
+    systemId
   })
 }
 

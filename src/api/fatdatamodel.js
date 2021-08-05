@@ -12,12 +12,11 @@ export async function updateFatDataModelData(modelId, modelData) {
   return businessRequest(`/fatdata/${modelId}`, 'patch', modelData)
 }
 
-export async function addFatDataModel(modelName, collectionName, systemId, propertyId) {
+export async function addFatDataModel(modelName, collectionName, systemId) {
   return businessRequest('/fatdata/', 'put', {
     name: modelName,
     collectionName,
-    systemId,
-    propertyId
+    systemId
   })
 }
 
