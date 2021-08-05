@@ -7,9 +7,6 @@
             <el-form-item label="模型名称">
               <el-input v-model="tdmData.model_name" />
             </el-form-item>
-            <el-form-item label="集合名">
-              <el-input v-model="tdmData.collection_name" />
-            </el-form-item>
             <el-form-item label="所属系统">
               <el-select v-model="tdmData.belong_system" filterable>
                 <el-option v-for="dataSystem in dataSystemList" :key="dataSystem._id" :label="dataSystem.system_name" :value="dataSystem._id" />
@@ -120,6 +117,7 @@ export default {
     },
     async handleAddProperty() {
       await this.$refs.editDialog.openCreateDialog()
+      await this.$refs.editDialog.setSourceModelProperties(this.tdmData.properties)
       this.$refs.editDialog.$once('handleAddDataProperty', async(dataPropertyEntity) => {
         const loadHandler = this.$loading({
           text: '提交数据中...'
@@ -135,8 +133,9 @@ export default {
         await this.loadTDMData()
       }
     },
-    handleEditProperty(index, data) {
-      this.$refs.editDialog.openEditDialog(data._id)
+    async handleEditProperty(index, data) {
+      await this.$refs.editDialog.openEditDialog(data._id)
+      await this.$refs.editDialog.setSourceModelProperties(this.tdmData.properties)
     },
     async updateBaseInfo() {
       this.$loading({
@@ -145,7 +144,7 @@ export default {
       try {
         await updateThinDataModelData(this.tdmId, {
           model_name: this.tdmData.model_name,
-          collection_name: this.tdmData.collection_name,
+          // collection_name: this.tdmData.collection_name,
           belong_system: this.tdmData.belong_system
         })
 

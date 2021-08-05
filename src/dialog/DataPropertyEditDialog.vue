@@ -17,8 +17,25 @@
           <el-option v-for="(value,key) in dataPropertyType" :key="key" :label="value.label" :value="key" />
         </el-select>
       </el-form-item>
-      <el-form-item v-if="isShowRefArea" label="数据REF" prop="ref">
-        <span>REF</span>
+      <el-form-item v-if="isShowRefArea" prop="ref">
+        <el-form label-position="top" :rules="rules" label-width="80px" :model="dataPropertyEntity.ref">
+          <el-form-item label="目标模型">
+            <el-select v-model="dataPropertyEntity.ref.target_model" filterable>
+              <el-option v-for="model in targetModelOptions" :key="model._id" :label="model.model_name" :value="model._id" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="源KEY">
+            <el-select v-model="dataPropertyEntity.ref.source_key" filterable>
+              <el-option v-for="sourceKeyData in sourceKeyOptions" :key="sourceKeyData._id" :label="sourceKeyData.name" :value="sourceKeyData.key" />
+            </el-select>
+            <!--            <el-input v-model="dataPropertyEntity.ref.source_key" />-->
+          </el-form-item>
+          <el-form-item label="目标KEY">
+            <el-select v-model="dataPropertyEntity.ref.target_key" filterable>
+              <el-option v-for="targetKeyData in targetKeyOptions" :key="targetKeyData._id" :label="targetKeyData.name" :value="targetKeyData.key" />
+            </el-select>
+          </el-form-item>
+        </el-form>
       </el-form-item>
     </el-form>
     <span slot="footer" class="dialog-footer">
@@ -35,6 +52,8 @@ import {
   getDataPropertyData,
   updateDataProperty
 } from '@/api/dataproperty'
+import { listFatDataModel, getFatDataModelData } from '@/api/fatdatamodel'
+import { listThinDataModel, getThinDataModelData } from '@/api/thindatamodel'
 
 export default {
   name: 'DataPropertyEditDialog',
@@ -47,14 +66,17 @@ export default {
   data() {
     return {
       mode: 'edit',
-      typeNeedToShowRef: ['ThinDataModelRef', 'FatDataModelRef'],
+      targetModelOptions: [],
+      sourceKeyOptions: [],
+      targetKeyOptions: [],
+      typeNeedToShowRef: ['ThinModelRef', 'FatModelRef'],
       dataPropertyId: '',
       dataPropertyEntity: {
         _id: '',
         name: '',
         key: '',
         type: '',
-        ref: null
+        ref: { }
       },
       allowedDataPropertyType: {},
       rules: {
@@ -63,8 +85,7 @@ export default {
         ],
         key: [
           { required: true, message: '请输入数据KEY', trigger: 'change' },
-          { pattern: '^\\w+$', message: '不符合数据KEY规范', trigger: 'change' },
-          { min: 3, max: 18, message: '长度在 3 到 18 个字符', trigger: 'change' }
+          { pattern: '^\\w+$', message: '不符合数据KEY规范', trigger: 'change' }
         ],
         type: [
           { required: true, message: '请选择数据类型', trigger: 'change' }
@@ -92,12 +113,44 @@ export default {
       return dataPropertyType
     }
   },
+  watch: {
+    async 'dataPropertyEntity.type'(newVal, oldVal) {
+      if (!newVal) {
+        return
+      }
+      this.dataPropertyEntity.ref.target_model = null
+      this.dataPropertyEntity.ref.source_key = null
+      this.dataPropertyEntity.ref.target_key = null
+      if (newVal === 'FatModelRef') {
+        this.targetModelOptions = await listFatDataModel()
+      } else if (newVal === 'ThinModelRef') {
+        this.targetModelOptions = await listThinDataModel()
+      }
+    },
+    async 'dataPropertyEntity.ref.target_model'(newVal, oldVal) {
+      if (!newVal) {
+        return
+      }
+      this.dataPropertyEntity.ref.source_key = null
+      this.dataPropertyEntity.ref.target_key = null
+      let modelData
+      if (this.dataPropertyEntity.type === 'FatModelRef') {
+        modelData = await getFatDataModelData(newVal)
+      } else if (this.dataPropertyEntity.type === 'ThinModelRef') {
+        modelData = await getThinDataModelData(newVal)
+      }
+      this.targetKeyOptions = modelData.properties
+    }
+  },
   methods: {
     async loadDataPropertyData() {
       this.dataPropertyEntity = await getDataPropertyData(this.dataPropertyId)
     },
     async loadAllowedDataPropertyType() {
       this.allowedDataPropertyType = await getAllowedDataPropertyType()
+    },
+    async setSourceModelProperties(sourceModelProperties) {
+      this.sourceKeyOptions = sourceModelProperties
     },
     async openCreateDialog() {
       this.dialogVisible = true

@@ -79,7 +79,7 @@ export default {
   },
   data() {
     return {
-      excludeDataPropertyTypes: ['FatDataModelRef', 'ThinDataModelRef'],
+      excludeDataPropertyTypes: ['FatModelRef', 'ThinModelRef'],
       fdmId: '',
       fdmData: {},
       currentTab: 'base',
@@ -120,6 +120,7 @@ export default {
     },
     async handleAddProperty() {
       await this.$refs.editDialog.openCreateDialog()
+      await this.$refs.editDialog.setSourceModelProperties(this.fdmData.properties)
       this.$refs.editDialog.$once('handleAddDataProperty', async(dataPropertyEntity) => {
         const loadHandler = this.$loading({
           text: '提交数据中...'
@@ -135,8 +136,9 @@ export default {
         await this.loadFDMData()
       }
     },
-    handleEditProperty(index, data) {
-      this.$refs.editDialog.openEditDialog(data._id)
+    async handleEditProperty(index, data) {
+      await this.$refs.editDialog.openEditDialog(data._id)
+      await this.$refs.editDialog.setSourceModelProperties(this.fdmData.properties)
     },
     async updateBaseInfo() {
       this.$loading({
