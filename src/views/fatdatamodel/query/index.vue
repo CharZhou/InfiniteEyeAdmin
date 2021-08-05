@@ -2,7 +2,7 @@
   <div>
     <el-card>
       <div slot="header" class="clearfix">
-        <span>查询语句</span>
+        <span>{{ fdmData.model_name }}</span>
         <div class="buttonGroup">
           <el-button type="primary" @click="checkJson">执行查询</el-button>
         </div>
@@ -60,7 +60,7 @@ export default {
       const values = Object.values(this.fdmData.properties
         .filter(prop => this.jsonExcludeKey.indexOf(prop.type) === -1)
         .map(prop => prop.key))
-      console.log('values', values)
+      // console.log('values', values)
       for (const value of values) {
         newQueryJson[value] = ''
       }

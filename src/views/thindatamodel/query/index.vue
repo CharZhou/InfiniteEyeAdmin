@@ -2,7 +2,7 @@
   <div>
     <el-card>
       <div slot="header" class="clearfix">
-        <span>查询语句</span>
+        <span>{{ tdmData.model_name }}</span>
         <div class="buttonGroup">
           <el-button type="primary" @click="checkJson">执行查询</el-button>
         </div>
@@ -45,14 +45,28 @@ export default {
       tdmData: {},
       queryResult: {},
       hasJsonFlag: true,
-      queryJson: {}
+      queryJson: {},
+      jsonExcludeKey: ['FatModelRef', 'ThinModelRef']
     }
   },
   async mounted() {
     this.tdmId = this.$route.query.tdmId
     await this.loadTDMData()
+
+    await this.initQueryJson()
   },
   methods: {
+    async initQueryJson() {
+      const newQueryJson = {}
+      const values = Object.values(this.tdmData.properties
+        .filter(prop => this.jsonExcludeKey.indexOf(prop.type) === -1)
+        .map(prop => prop.key))
+      // console.log('values', values)
+      for (const value of values) {
+        newQueryJson[value] = ''
+      }
+      this.queryJson = newQueryJson
+    },
     async loadTDMData() {
       const loadHandler = this.$loading({
         text: '获取数据中'
