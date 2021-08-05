@@ -45,14 +45,27 @@ export default {
       fdmData: {},
       queryResult: {},
       hasJsonFlag: true,
-      queryJson: {}
+      queryJson: {},
+      jsonExcludeKey: ['FatModelRef', 'ThinModelRef']
     }
   },
   async mounted() {
     this.fdmId = this.$route.query.fdmId
     await this.loadFDMData()
+    await this.initQueryJson()
   },
   methods: {
+    async initQueryJson() {
+      const newQueryJson = {}
+      const values = Object.values(this.fdmData.properties
+        .filter(prop => this.jsonExcludeKey.indexOf(prop.type) === -1)
+        .map(prop => prop.key))
+      console.log('values', values)
+      for (const value of values) {
+        newQueryJson[value] = ''
+      }
+      this.queryJson = newQueryJson
+    },
     async loadFDMData() {
       const loadHandler = this.$loading({
         text: '获取数据中'
