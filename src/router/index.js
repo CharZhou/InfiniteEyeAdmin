@@ -68,7 +68,7 @@ export const constantRoutes = [
     path: '/datamodel',
     component: Layout,
     redirect: '/datamodel/fat',
-    meta: { title: '胖数据模型管理', icon: 'dashboard' },
+    meta: { title: '数据模型管理', icon: 'dashboard' },
     children: [
       {
         path: 'fat',
@@ -79,18 +79,32 @@ export const constantRoutes = [
       {
         path: 'thin',
         name: 'thin',
-        component: () => import('@/views/fatdatamodel/index'),
+        component: () => import('@/views/thindatamodel/index'),
         meta: { title: '瘦数据模型清单', icon: 'dashboard' }
       },
       {
-        path: 'edit',
+        path: 'thin/edit',
         name: 'edit',
-        component: () => import('@/views/fatdatamodel/edit/index')
+        component: () => import('@/views/thindatamodel/edit/index'),
+        hidden: true
       },
       {
-        path: 'query',
+        path: 'thin/query',
         name: 'query',
-        component: () => import('@/views/fatdatamodel/query/index')
+        component: () => import('@/views/thindatamodel/query/index'),
+        hidden: true
+      },
+      {
+        path: 'fat/edit',
+        name: 'edit',
+        component: () => import('@/views/fatdatamodel/edit/index'),
+        hidden: true
+      },
+      {
+        path: 'fat/query',
+        name: 'query',
+        component: () => import('@/views/fatdatamodel/query/index'),
+        hidden: true
       }
     ]
   },
