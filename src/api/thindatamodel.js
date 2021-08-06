@@ -34,7 +34,7 @@ export async function removeThinDataModelDataProperty(modelId, propertyId) {
   return businessRequest(`/thindata/${modelId}/${propertyId}`, 'delete')
 }
 
-export async function addFatThinModelDataProperty(modelId, propertyId) {
+export async function addThinDataModelDataProperty(modelId, propertyId) {
   return businessRequest(`/thindata/${modelId}/property`, 'put', {
     propertyId
   })

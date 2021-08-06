@@ -3,15 +3,15 @@
     <el-card>
       <el-tabs v-model="currentTab" type="card">
         <el-tab-pane label="基础信息" name="base">
-          <el-form v-model="fdmData" label-position="top" label-width="180px">
+          <el-form v-model="dmData" label-position="top" label-width="180px">
             <el-form-item label="模型名称">
-              <el-input v-model="fdmData.model_name" />
+              <el-input v-model="dmData.model_name" />
             </el-form-item>
-            <el-form-item label="集合名">
-              <el-input v-model="fdmData.collection_name" />
+            <el-form-item v-if="dmType === 'FatModel'" label="集合名">
+              <el-input v-model="dmData.collection_name" />
             </el-form-item>
             <el-form-item label="所属系统">
-              <el-select v-model="fdmData.belong_system" filterable>
+              <el-select v-model="dmData.belong_system" filterable clearable>
                 <el-option v-for="dataSystem in dataSystemList" :key="dataSystem._id" :label="dataSystem.system_name" :value="dataSystem._id" />
               </el-select>
             </el-form-item>
@@ -26,7 +26,7 @@
               </div>
             </div>
             <el-table
-              :data="fdmData.properties"
+              :data="dmData.properties"
               border
               fit
             >
@@ -62,12 +62,23 @@
         </el-tab-pane>
       </el-tabs>
     </el-card>
-    <DataPropertyEditDialog ref="editDialog" :exclude-type="excludeDataPropertyTypes" @dialogClose="handleDPDialogClose" />
+    <DataPropertyEditDialog ref="editDialog" :available-type="availableDataPropertyTypes" @dialogClose="handleDPDialogClose" />
   </div>
 </template>
 
 <script>
-import { getFatDataModelData, updateFatDataModelData, removeFatDataModelDataProperty, addFatDataModelDataProperty } from '@/api/fatdatamodel'
+import {
+  addFatDataModelDataProperty,
+  getFatDataModelData,
+  removeFatDataModelDataProperty,
+  updateFatDataModelData
+} from '@/api/fatdatamodel'
+import {
+  addThinDataModelDataProperty,
+  getThinDataModelData,
+  removeThinDataModelDataProperty,
+  updateThinDataModelData
+} from '@/api/thindatamodel'
 import { listDataSystem } from '@/api/datasystem'
 import DataPropertyEditDialog from '@/dialog/DataPropertyEditDialog'
 import { getAllowedDataPropertyType } from '@/api/dataproperty'
@@ -79,19 +90,27 @@ export default {
   },
   data() {
     return {
-      excludeDataPropertyTypes: ['FatModelRef', 'ThinModelRef'],
-      fdmId: '',
-      fdmData: {},
+      dmType: '',
+      dmId: '',
+      dmData: {},
       currentTab: 'base',
       dataSystemList: [],
       allowedDataPropertyType: {}
     }
   },
+  computed: {
+    availableDataPropertyTypes() {
+      return Object.keys(this.allowedDataPropertyType).filter((dataPropertyType) => {
+        return this.allowedDataPropertyType[dataPropertyType].availableModels.indexOf(this.dmType) !== -1
+      })
+    }
+  },
   async mounted() {
     await this.loadAllowedDataPropertyType()
 
-    this.fdmId = this.$route.query.fdmId
-    await this.loadFDMData()
+    this.dmType = this.$route.query.dmType
+    this.dmId = this.$route.query.dmId
+    await this.loadDMData()
   },
   methods: {
     dpTypeFormatter(row) {
@@ -100,11 +119,11 @@ export default {
     async loadAllowedDataPropertyType() {
       this.allowedDataPropertyType = await getAllowedDataPropertyType()
     },
-    async loadFDMData() {
+    async loadDMData() {
       const loadHandler = this.$loading({
         text: '获取数据中'
       })
-      this.fdmData = await getFatDataModelData(this.fdmId)
+      this.dmData = this.dmType === 'FatModel' ? await getFatDataModelData(this.dmId) : await getThinDataModelData(this.dmId)
       this.dataSystemList = await listDataSystem()
       loadHandler.close()
     },
@@ -115,41 +134,57 @@ export default {
         type: 'warning'
       })
 
-      await removeFatDataModelDataProperty(this.fdmId, data._id)
-      await this.loadFDMData()
+      if (this.dmType === 'FatModel') {
+        await removeFatDataModelDataProperty(this.dmId, data._id)
+      } else {
+        await removeThinDataModelDataProperty(this.dmId, data._id)
+      }
+
+      await this.loadDMData()
     },
     async handleAddProperty() {
       await this.$refs.editDialog.openCreateDialog()
-      await this.$refs.editDialog.setSourceModelProperties(this.fdmData.properties)
+      await this.$refs.editDialog.setSourceModelProperties(this.dmData.properties)
       this.$refs.editDialog.$once('handleAddDataProperty', async(dataPropertyEntity) => {
         const loadHandler = this.$loading({
           text: '提交数据中...'
         })
         // console.log('handleAddDataProperty', dataPropertyEntity)
-        await addFatDataModelDataProperty(this.fdmId, dataPropertyEntity._id)
-        await this.loadFDMData()
+        if (this.dmType === 'FatModel') {
+          await addFatDataModelDataProperty(this.dmId, dataPropertyEntity._id)
+        } else {
+          await addThinDataModelDataProperty(this.dmId, dataPropertyEntity._id)
+        }
+        await this.loadDMData()
         loadHandler.close()
       })
     },
     async handleDPDialogClose(confirm) {
       if (confirm) {
-        await this.loadFDMData()
+        await this.loadDMData()
       }
     },
     async handleEditProperty(index, data) {
       await this.$refs.editDialog.openEditDialog(data._id)
-      await this.$refs.editDialog.setSourceModelProperties(this.fdmData.properties)
+      await this.$refs.editDialog.setSourceModelProperties(this.dmData.properties)
     },
     async updateBaseInfo() {
       this.$loading({
         text: '提交更新中...'
       })
       try {
-        await updateFatDataModelData(this.fdmId, {
-          model_name: this.fdmData.model_name,
-          collection_name: this.fdmData.collection_name,
-          belong_system: this.fdmData.belong_system
-        })
+        if (this.dmType === 'FatModel') {
+          await updateFatDataModelData(this.dmId, {
+            model_name: this.dmData.model_name,
+            collection_name: this.dmData.collection_name,
+            belong_system: this.dmData.belong_system
+          })
+        } else {
+          await updateThinDataModelData(this.dmId, {
+            model_name: this.dmData.model_name,
+            belong_system: this.dmData.belong_system
+          })
+        }
 
         this.$message({
           message: '更新成功',

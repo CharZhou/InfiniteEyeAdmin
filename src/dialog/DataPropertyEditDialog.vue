@@ -13,26 +13,43 @@
         <el-input v-model="dataPropertyEntity.key" />
       </el-form-item>
       <el-form-item label="数据类型" prop="type">
-        <el-select v-model="dataPropertyEntity.type" filterable>
+        <el-select v-model="dataPropertyEntity.type" filterable clearable>
           <el-option v-for="(value,key) in dataPropertyType" :key="key" :label="value.label" :value="key" />
         </el-select>
       </el-form-item>
       <el-form-item v-if="isShowRefArea" prop="ref">
-        <el-form label-position="top" label-width="80px" :model="dataPropertyEntity.ref">
+        <el-form label-position="top" label-width="80px" :model="dataPropertyEntity.ref" :rules="refRules">
           <el-form-item label="源KEY" prop="source_key">
-            <el-select v-model="dataPropertyEntity.ref.source_key" filterable>
+            <el-select v-model="dataPropertyEntity.ref.source_key" filterable clearable>
               <el-option v-for="sourceKeyData in sourceKeyOptions" :key="sourceKeyData._id" :label="sourceKeyData.name" :value="sourceKeyData.key" />
             </el-select>
           </el-form-item>
-          <el-form-item label="目标模型" property="target_model">
-            <el-select v-model="dataPropertyEntity.ref.target_model" filterable>
+          <el-form-item label="目标模型" prop="target_model">
+            <el-select v-model="dataPropertyEntity.ref.target_model" filterable clearable>
               <el-option v-for="model in targetModelOptions" :key="model._id" :label="model.model_name" :value="model._id" />
             </el-select>
           </el-form-item>
           <el-form-item label="目标KEY" prop="target_key">
-            <el-select v-model="dataPropertyEntity.ref.target_key" filterable>
+            <el-select v-model="dataPropertyEntity.ref.target_key" filterable clearable>
               <el-option v-for="targetKeyData in targetKeyOptions" :key="targetKeyData._id" :label="targetKeyData.name" :value="targetKeyData.key" />
             </el-select>
+          </el-form-item>
+          <el-form-item label="目标节点" prop="target_node">
+            <el-select v-model="dataPropertyEntity.ref.target_node" filterable clearable>
+              <el-option v-for="targetKeyData in targetKeyOptions" :key="targetKeyData._id" :label="targetKeyData.name" :value="targetKeyData.key" />
+            </el-select>
+          </el-form-item>
+        </el-form>
+      </el-form-item>
+      <el-form-item v-if="isShowDataTransferArea" prop="transfer">
+        <el-form label-position="top" label-width="80px" :model="dataPropertyEntity.transfer" :rules="transferRules">
+          <el-form-item label="转换方法" prop="transfer_rule">
+            <el-select v-model="dataPropertyEntity.transfer.transfer_rule" filterable clearable>
+              <el-option v-for="(value,key) in dataTransferRule" :key="key" :label="value.label" :value="key" />
+            </el-select>
+          </el-form-item>
+          <el-form-item label="源KEY" prop="source_key">
+            <el-input v-model="dataPropertyEntity.transfer.source_key" />
           </el-form-item>
         </el-form>
       </el-form-item>
@@ -49,6 +66,7 @@ import {
   addDataProperty,
   getAllowedDataPropertyType,
   getDataPropertyData,
+  getDataTransferRule,
   updateDataProperty
 } from '@/api/dataproperty'
 import { listFatDataModel, getFatDataModelData } from '@/api/fatdatamodel'
@@ -57,7 +75,7 @@ import { listThinDataModel, getThinDataModelData } from '@/api/thindatamodel'
 export default {
   name: 'DataPropertyEditDialog',
   props: {
-    excludeType: {
+    availableType: {
       type: Array,
       default: () => []
     }
@@ -75,9 +93,25 @@ export default {
         name: '',
         key: '',
         type: '',
-        ref: { }
+        ref: {
+          target_model: null,
+          target_key: null,
+          source_key: null,
+          target_node: null
+        },
+        transfer: {
+          transfer_rule: null,
+          source_key: null
+        }
       },
       allowedDataPropertyType: {},
+      dataTransferRule: {},
+      refRules: {
+        target_model: [
+          { required: () => this.isShowRefArea, message: '请选择目标模型', trigger: 'change' }
+        ]
+      },
+      transferRules: {},
       rules: {
         name: [
           { type: 'string', required: true, message: '请输入数据系统名', trigger: 'change' }
@@ -87,11 +121,6 @@ export default {
         ],
         type: [
           { required: true, message: '请选择数据类型', trigger: 'change' }
-        ],
-        ref: [
-          {
-            required: () => this.isShowRefArea,
-            message: '请填写模型REF', trigger: 'change' }
         ]
       },
       dialogVisible: false
@@ -101,10 +130,13 @@ export default {
     isShowRefArea() {
       return this.typeNeedToShowRef.indexOf(this.dataPropertyEntity.type) !== -1
     },
+    isShowDataTransferArea() {
+      return this.dataPropertyEntity.type === 'DataTransfer'
+    },
     dataPropertyType() {
       const dataPropertyType = {}
       for (const dataPropertyKey in this.allowedDataPropertyType) {
-        if (this.excludeType.indexOf(dataPropertyKey) === -1) {
+        if (this.availableType.indexOf(dataPropertyKey) !== -1) {
           dataPropertyType[dataPropertyKey] = this.allowedDataPropertyType[dataPropertyKey]
         }
       }
@@ -117,9 +149,9 @@ export default {
       if (!newVal) {
         return
       }
-      this.$set(this.dataPropertyEntity, 'ref.target_model', null)
-      this.$set(this.dataPropertyEntity, 'ref.source_key', null)
-      this.$set(this.dataPropertyEntity, 'ref.target_key', null)
+      await this.clearTargetModel()
+      await this.clearModelRef()
+      await this.clearTransferRule()
       if (newVal === 'FatModelRef') {
         this.targetModelOptions = await listFatDataModel()
       } else if (newVal === 'ThinModelRef') {
@@ -131,8 +163,7 @@ export default {
       if (!newVal) {
         return
       }
-      this.$set(this.dataPropertyEntity, 'ref.source_key', null)
-      this.$set(this.dataPropertyEntity, 'ref.target_key', null)
+      await this.clearModelRef()
       let modelData
       if (this.dataPropertyEntity.type === 'FatModelRef') {
         modelData = await getFatDataModelData(newVal)
@@ -144,11 +175,24 @@ export default {
     deep: true
   },
   methods: {
+    async clearTransferRule() {
+      this.$set(this.dataPropertyEntity, 'transfer.source_key', null)
+      this.$set(this.dataPropertyEntity, 'transfer.transfer_rule', null)
+    },
+    async clearModelRef() {
+      this.$set(this.dataPropertyEntity, 'ref.source_key', null)
+      this.$set(this.dataPropertyEntity, 'ref.target_key', null)
+      this.$set(this.dataPropertyEntity, 'ref.target_node', null)
+    },
+    async clearTargetModel() {
+      this.$set(this.dataPropertyEntity, 'ref.target_model', null)
+    },
     async loadDataPropertyData() {
       this.dataPropertyEntity = await getDataPropertyData(this.dataPropertyId)
     },
-    async loadAllowedDataPropertyType() {
+    async loadBaseConfig() {
       this.allowedDataPropertyType = await getAllowedDataPropertyType()
+      this.dataTransferRule = await getDataTransferRule()
     },
     async setSourceModelProperties(sourceModelProperties) {
       this.sourceKeyOptions = sourceModelProperties
@@ -158,7 +202,7 @@ export default {
       this.mode = 'add'
       this.$emit('dialogOpen')
 
-      await this.loadAllowedDataPropertyType()
+      await this.loadBaseConfig()
     },
     async openEditDialog(dataPropertyId) {
       this.dialogVisible = true
@@ -167,7 +211,7 @@ export default {
 
       this.dataPropertyId = dataPropertyId
       await this.loadDataPropertyData()
-      await this.loadAllowedDataPropertyType()
+      await this.loadBaseConfig()
     },
     closeDialog(confirm) {
       this.dialogVisible = false
@@ -184,7 +228,8 @@ export default {
           name: this.dataPropertyEntity.name,
           key: this.dataPropertyEntity.key,
           type: this.dataPropertyEntity.type,
-          ref: this.dataPropertyEntity.ref
+          ref: this.dataPropertyEntity.ref,
+          transfer: this.dataPropertyEntity.transfer
         })
         this.$message({
           message: '更新数据属性成功',
@@ -192,7 +237,13 @@ export default {
         })
         this.$emit('handleEditDataProperty')
       } else if (this.mode === 'add') {
-        const dataPropertyEntity = await addDataProperty(this.dataPropertyEntity.name, this.dataPropertyEntity.key, this.dataPropertyEntity.type, this.dataPropertyEntity.ref)
+        const dataPropertyEntity = await addDataProperty({
+          name: this.dataPropertyEntity.name,
+          key: this.dataPropertyEntity.key,
+          type: this.dataPropertyEntity.type,
+          ref: this.dataPropertyEntity.ref,
+          transfer: this.dataPropertyEntity.transfer
+        })
         this.$emit('handleAddDataProperty', dataPropertyEntity)
       }
 

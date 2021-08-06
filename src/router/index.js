@@ -73,37 +73,25 @@ export const constantRoutes = [
       {
         path: 'fat',
         name: 'fat',
-        component: () => import('@/views/fatdatamodel/index'),
+        component: () => import('@/views/datamodel/fat'),
         meta: { title: '胖数据模型清单', icon: 'dashboard' }
       },
       {
         path: 'thin',
         name: 'thin',
-        component: () => import('@/views/thindatamodel/index'),
+        component: () => import('@/views/datamodel/thin'),
         meta: { title: '瘦数据模型清单', icon: 'dashboard' }
       },
       {
-        path: 'thin/edit',
-        name: 'edit',
-        component: () => import('@/views/thindatamodel/edit/index'),
-        hidden: true
-      },
-      {
-        path: 'thin/query',
+        path: 'query',
         name: 'query',
-        component: () => import('@/views/thindatamodel/query/index'),
+        component: () => import('@/views/datamodel/query/index'),
         hidden: true
       },
       {
-        path: 'fat/edit',
+        path: 'edit',
         name: 'edit',
-        component: () => import('@/views/fatdatamodel/edit/index'),
-        hidden: true
-      },
-      {
-        path: 'fat/query',
-        name: 'query',
-        component: () => import('@/views/fatdatamodel/query/index'),
+        component: () => import('@/views/datamodel/edit/index'),
         hidden: true
       }
     ]

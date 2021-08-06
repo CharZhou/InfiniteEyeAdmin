@@ -1,7 +1,11 @@
 import { businessRequest } from './base'
 
 export async function getAllowedDataPropertyType() {
-  return businessRequest('/dataproperty/config/allowedTypes', 'get')
+  return businessRequest('/dataproperty/config/allowedDataPropertyType', 'get')
+}
+
+export async function getDataTransferRule() {
+  return businessRequest('/dataproperty/config/dataTransferRule', 'get')
 }
 
 export async function getDataPropertyData(propertyId) {
@@ -12,13 +16,8 @@ export async function updateDataProperty(propertyId, propertyData) {
   return businessRequest(`/dataproperty/${propertyId}`, 'patch', propertyData)
 }
 
-export async function addDataProperty(propertyName, propertyKey, propertyType, propertyRef) {
-  return businessRequest('/dataproperty/', 'put', {
-    name: propertyName,
-    key: propertyKey,
-    type: propertyType,
-    ref: propertyRef
-  })
+export async function addDataProperty(propertyData) {
+  return businessRequest('/dataproperty/', 'put', propertyData)
 }
 
 export async function delDataProperty(propertyId) {

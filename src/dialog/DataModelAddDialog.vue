@@ -13,7 +13,7 @@
         <el-input v-model="dataModelEntity.collectionName" />
       </el-form-item>
       <el-form-item label="所属数据系统">
-        <el-select v-model="dataModelEntity.belongSystem" filterable>
+        <el-select v-model="dataModelEntity.belongSystem" filterable clearable>
           <el-option v-for="dataSystem in dataSystemOptions" :key="dataSystem._id" :label="dataSystem.system_name" :value="dataSystem._id" />
         </el-select>
       </el-form-item>
